@@ -1,0 +1,23 @@
+{
+  "configVersion": 2,
+  "packages": [
+    {
+      "name": "lints",
+      "rootUri": "file:///Users/gerardo/.pub-cache/hosted/pub.dev/lints-5.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.5"
+    },
+    {
+      "name": "halve_it",
+      "rootUri": "../",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    }
+  ],
+  "generated": "2024-11-20T01:28:15.792466Z",
+  "generator": "pub",
+  "generatorVersion": "3.5.2",
+  "flutterRoot": "file:///Users/gerardo/Workspace/flutter",
+  "flutterVersion": "3.24.2",
+  "pubCache": "file:///Users/gerardo/.pub-cache"
+}
