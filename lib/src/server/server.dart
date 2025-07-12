@@ -14,16 +14,11 @@ class Server {
   });
 
   void run() async {
-    print('Runing admin server...');
+    print('🎯 Stating server...');
     final requests = await HttpServer.bind(host, port);
-    print('Server listening at http://${requests.address.host}:${requests.port}');
+    print('Server listening at http://${requests.address.host}:${requests.port}\n');
     await for (final request in requests) {
-      await processRequest(request);
+     await router.resolveRequest(request);
     }
-  }
-
-  Future<void> processRequest(HttpRequest request) async {
-    print('Request for ${request.method} ${request.uri.path}');
-    await router.resolveRequest(request);
   }
 }

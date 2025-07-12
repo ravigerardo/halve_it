@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import '../handle/response.dart';
 import 'route.dart';
 
 class Router {
@@ -21,18 +22,25 @@ class Router {
 
   Future<void> resolveRequest(HttpRequest request) async {
     final response = request.response;
+    String responseDetails;
     try {
       final route = routes.firstWhere((route) {
         final bool isSamePath = route.path == request.uri.path;
-        final bool isSameHttpMethod = route.httpMethod.name == request.method;
+        final bool isSameHttpMethod = route.method.name == request.method;
 
         return isSamePath && isSameHttpMethod;
       });
-      await route.method(request, response);
+      final Response handleResponse = await route.handle();
+      response
+        ..statusCode = handleResponse.status
+        ..headers.contentType = handleResponse.type ?? ContentType.json
+        ..write(handleResponse.body);
+      responseDetails = '${route.handle.toString()}';
     } catch (error) {
-      print('Route not found: ${request.uri.path}');
       response.statusCode = HttpStatus.notFound;
+      responseDetails = 'Route not found';
     }
+    print('Request for ${request.method} ${request.uri.path} - $responseDetails');
     response.close();
   }
 }
