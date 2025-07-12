@@ -14,10 +14,8 @@
       "languageVersion": "3.0"
     }
   ],
-  "generated": "2025-01-03T02:16:16.175768Z",
+  "generated": "2025-07-12T04:12:33.710680Z",
   "generator": "pub",
-  "generatorVersion": "3.5.2",
-  "flutterRoot": "file:///Users/gerardo/Workspace/flutter",
-  "flutterVersion": "3.24.2",
+  "generatorVersion": "3.5.4",
   "pubCache": "file:///Users/gerardo/.pub-cache"
 }
