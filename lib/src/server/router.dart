@@ -2,22 +2,19 @@ import 'dart:io';
 
 import '../handle/response.dart';
 import 'route.dart';
+import 'route_group.dart';
 
 class Router {
-  List<Route> routes;
+  List<RouteGroup> routeGroups;
 
   Router({
-    required this.routes,
+    required this.routeGroups,
   });
 
-  get props => [routes];
+  get props => [routeGroups];
 
-  void addRoute(Route route) {
-    this.routes.add(route);
-  }
-
-  void addRoutes(List<Route> routes) {
-    this.routes.addAll(routes);
+  void addRouteGroup(RouteGroup routeGroup) {
+    this.routeGroups.add(routeGroup);
   }
 
   Future<void> resolveRequest(HttpRequest request) async {
@@ -25,20 +22,27 @@ class Router {
     String responseDetails;
     try {
       final uriPath = request.uri.path;
-      final route = routes.firstWhere((route) {
-        if (route.method.name != request.method) return false;
-        final routeSegments = route.path.split('/').where((s) => s.isNotEmpty).toList();
-        final uriSegments = uriPath.split('/').where((s) => s.isNotEmpty).toList();
-        if (routeSegments.length != uriSegments.length) return false;
-        for (int i = 0; i < routeSegments.length; i++) {
-          if (routeSegments[i].startsWith(':')) continue;
-          if (routeSegments[i] != uriSegments[i]) return false;
-        }
-        return true;
-      });
+      late Route route;
+      for (var routeGroup in routeGroups) {
+        route = routeGroup.routes.firstWhere((route) {
+          if (route.method.name != request.method) return false;
+          final routeSegments =
+              route.path.split('/').where((s) => s.isNotEmpty).toList();
+          final uriSegments =
+              uriPath.split('/').where((s) => s.isNotEmpty).toList();
+          if (routeSegments.length != uriSegments.length) return false;
+          for (int i = 0; i < routeSegments.length; i++) {
+            if (routeSegments[i].startsWith(':')) continue;
+            if (routeSegments[i] != uriSegments[i]) return false;
+          }
+          return true;
+        });
+      }
 
-      final routeSegments = route.path.split('/').where((s) => s.isNotEmpty).toList();
-      final uriSegments = uriPath.split('/').where((s) => s.isNotEmpty).toList();
+      final routeSegments =
+          route.path.split('/').where((s) => s.isNotEmpty).toList();
+      final uriSegments =
+          uriPath.split('/').where((s) => s.isNotEmpty).toList();
       final params = <String, String>{};
       for (int i = 0; i < routeSegments.length; i++) {
         if (routeSegments[i].startsWith(':')) {
@@ -56,7 +60,9 @@ class Router {
       response.statusCode = HttpStatus.notFound;
       responseDetails = '😵‍💫 Route not found';
     }
-    print('Request for ${request.method} ${request.uri.path} - $responseDetails');
+    print(
+        'Request for ${request.method} ${request.uri.path} - $responseDetails');
     response.close();
   }
 }
+
