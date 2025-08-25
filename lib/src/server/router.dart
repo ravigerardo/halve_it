@@ -1,8 +1,10 @@
 import 'dart:io';
 
+import 'package:intl/intl.dart';
+
 import '../handle/response.dart';
-import 'route.dart';
 import 'route_group.dart';
+import 'route.dart';
 
 class Router {
   List<RouteGroup> routeGroups;
@@ -19,12 +21,58 @@ class Router {
 
   Future<void> resolveRequest(HttpRequest request) async {
     final response = request.response;
-    String responseDetails;
+    late Route route;
+    late RouteGroup routeGroup;
+    Response? finalResponse;
+
     try {
-      final uriPath = request.uri.path;
-      late Route route;
-      for (var routeGroup in routeGroups) {
-        route = routeGroup.routes.firstWhere((route) {
+      try {
+        (route, routeGroup) = _getRouteAndRoutGroup(request);
+      } catch (error) {
+        response.statusCode = HttpStatus.notFound;
+        _printRequestPath(request, '😵‍💫 Route not found - $error');
+        response.close();
+        return;
+      }
+
+      final params = _getParams(request, route);
+
+      for (var middleware in routeGroup.middlewares) {
+        _printRequestPath(request, '🔮 ${_getInstanceName(middleware)}');
+        final Response? middlewareResponse = await middleware(request, params);
+        if (middlewareResponse != null) {
+          finalResponse = middlewareResponse;
+          break;
+        }
+      }
+
+      if (finalResponse == null) {
+        _printRequestPath(request, '🌸 ${_getInstanceName(route.handle)}');
+        finalResponse = await route.handle(request, params);
+      }
+
+      response
+        ..statusCode = finalResponse.status
+        ..headers.contentType = finalResponse.type ?? ContentType.json
+        ..write(finalResponse.body);
+
+      response.close();
+      return;
+    } catch (error) {
+      response.statusCode = HttpStatus.internalServerError;
+      _printRequestPath(request, '😵‍💫 Internal Server Error - $error');
+      response.close();
+      return;
+    }
+  }
+
+  (Route, RouteGroup) _getRouteAndRoutGroup(HttpRequest request) {
+    final uriPath = request.uri.path;
+    late Route route;
+    late RouteGroup routeGroup;
+    for (var group in routeGroups) {
+      try {
+        route = group.routes.firstWhere((route) {
           if (route.method.name != request.method) return false;
           final routeSegments =
               route.path.split('/').where((s) => s.isNotEmpty).toList();
@@ -35,34 +83,39 @@ class Router {
             if (routeSegments[i].startsWith(':')) continue;
             if (routeSegments[i] != uriSegments[i]) return false;
           }
+          routeGroup = group;
           return true;
         });
-      }
-
-      final routeSegments =
-          route.path.split('/').where((s) => s.isNotEmpty).toList();
-      final uriSegments =
-          uriPath.split('/').where((s) => s.isNotEmpty).toList();
-      final params = <String, String>{};
-      for (int i = 0; i < routeSegments.length; i++) {
-        if (routeSegments[i].startsWith(':')) {
-          params[routeSegments[i].substring(1)] = uriSegments[i];
-        }
-      }
-
-      final Response handleResponse = await route.handle(request, params);
-      response
-        ..statusCode = handleResponse.status
-        ..headers.contentType = handleResponse.type ?? ContentType.json
-        ..write(handleResponse.body);
-      responseDetails = '🌸 ${route.handle.toString()}';
-    } catch (error) {
-      response.statusCode = HttpStatus.notFound;
-      responseDetails = '😵‍💫 Route not found';
+      } catch (_) {}
     }
-    print(
-        'Request for ${request.method} ${request.uri.path} - $responseDetails');
-    response.close();
+
+    return (route, routeGroup);
+  }
+
+  Map<String, String> _getParams(HttpRequest request, Route route) {
+    final uriPath = request.uri.path;
+    final routeSegments =
+        route.path.split('/').where((s) => s.isNotEmpty).toList();
+    final uriSegments = uriPath.split('/').where((s) => s.isNotEmpty).toList();
+    final params = <String, String>{};
+    for (int i = 0; i < routeSegments.length; i++) {
+      if (routeSegments[i].startsWith(':')) {
+        params[routeSegments[i].substring(1)] = uriSegments[i];
+      }
+    }
+
+    return params;
+  }
+
+  void _printRequestPath(HttpRequest request, String details) {
+    print('[${DateFormat('Hms').format(DateTime.now())}] ' +
+        'Request for ' +
+        '${request.method} ${request.uri.path} - $details');
+  }
+
+  String _getInstanceName(instance) {
+    final match = RegExp(r"'([^']*)'").firstMatch(instance.toString());
+    final name = '${match![0]}';
+    return name.substring(1, name.length - 1);
   }
 }
-

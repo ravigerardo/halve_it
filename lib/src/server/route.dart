@@ -6,7 +6,6 @@ class Route {
   final String path;
   final Handle handle;
 
-  // Extract parameter names from path pattern (e.g., /user/:id)
   List<String> get pathParams {
     final regExp = RegExp(r':(\w+)');
     return regExp.allMatches(path).map((m) => m.group(1)!).toList();
