@@ -5,4 +5,4 @@ export 'src/server/router.dart' show Router;
 export 'src/server/http_methods.dart' show HttpMethod;
 export 'src/server/middleware.dart' show Middleware;
 export 'src/handle/handle.dart' show Handle;
-export 'src/handle/response.dart' show Response;
+export 'src/handle/response.dart' show Response, Redirection;

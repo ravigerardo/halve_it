@@ -29,8 +29,8 @@ class Router {
       try {
         (route, routeGroup) = _getRouteAndRoutGroup(request);
       } catch (error) {
-        response.statusCode = HttpStatus.notFound;
         _printRequestPath(request, '😵‍💫 Route not found - $error');
+        response.statusCode = HttpStatus.notFound;
         response.close();
         return;
       }
@@ -49,6 +49,17 @@ class Router {
       if (finalResponse == null) {
         _printRequestPath(request, '🌸 ${_getInstanceName(route.handle)}');
         finalResponse = await route.handle(request, params);
+      }
+
+      if (finalResponse.redirection != null) {
+        final redirection = finalResponse.redirection;
+        _printRequestPath(
+            request, '🛸 Redirect to ${redirection!.location.host}');
+        response.redirect(
+          redirection.location,
+          status: redirection.status,
+        );
+        return;
       }
 
       response
