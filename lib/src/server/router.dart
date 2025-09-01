@@ -51,10 +51,23 @@ class Router {
         finalResponse = await route.handle(request, params);
       }
 
+      print("There are ${route.handle.cookies.length} cookies");
+      if (route.handle.cookies.isNotEmpty) {
+        _printRequestPath(request, '🍪 There are cookies!');
+        for (Cookie cookie in route.handle.cookies) {
+          print('🍪 Cookie: ${cookie.name}: ${cookie.value}');
+        }
+        response.cookies.addAll(route.handle.cookies);
+      }
+
       if (finalResponse.redirection != null) {
         final redirection = finalResponse.redirection;
         _printRequestPath(
-            request, '🛸 Redirect to ${redirection!.location.host}');
+          request,
+          '🛸 Redirect to '
+          '${redirection!.location.host}'
+          '${redirection.location.path}',
+        );
         response.redirect(
           redirection.location,
           status: redirection.status,
