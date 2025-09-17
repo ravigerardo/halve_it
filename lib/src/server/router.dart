@@ -51,12 +51,7 @@ class Router {
         finalResponse = await route.handle(request, params);
       }
 
-      print("There are ${route.handle.cookies.length} cookies");
       if (route.handle.cookies.isNotEmpty) {
-        _printRequestPath(request, '🍪 There are cookies!');
-        for (Cookie cookie in route.handle.cookies) {
-          print('🍪 Cookie: ${cookie.name}: ${cookie.value}');
-        }
         response.cookies.addAll(route.handle.cookies);
       }
 
