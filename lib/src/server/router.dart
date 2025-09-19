@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:intl/intl.dart';
 
+import 'middleware.dart';
 import '../handle/response.dart';
 import 'route_group.dart';
 import 'route.dart';
@@ -37,14 +38,18 @@ class Router {
 
       final params = _getParams(request, route);
 
-      for (var middleware in routeGroup.middlewares) {
-        _printRequestPath(request, '🔮 ${_getInstanceName(middleware)}');
-        final Response? middlewareResponse = await middleware(request, params);
-        if (middlewareResponse != null) {
-          finalResponse = middlewareResponse;
-          break;
-        }
-      }
+      Context context = Context(
+        request: request,
+        params: params,
+        cookies: [],
+      );
+
+      context = await runMiddlewares(
+        context: context,
+        middlewares: routeGroup.middlewares,
+      );
+
+      finalResponse = context.response;
 
       if (finalResponse == null) {
         _printRequestPath(request, '🌸 ${_getInstanceName(route.handle)}');
