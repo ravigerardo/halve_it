@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import '../helpers/print_logs.dart';
+import '../helpers/helpers.dart';
 import 'middleware.dart';
 import '../handle/response.dart';
 import 'route_group.dart';
@@ -52,7 +52,7 @@ class Router {
       route.handle.cookies.addAll(context.cookies);
 
       if (finalResponse == null) {
-        printRequestPath(request, '🌸 ${_getInstanceName(route.handle)}');
+        printRequestPath(request, '🌸 ${getInstanceName(route.handle)}');
         finalResponse = await route.handle(request, params);
       }
 
@@ -127,11 +127,5 @@ class Router {
     }
 
     return params;
-  }
-
-  String _getInstanceName(instance) {
-    final match = RegExp(r"'([^']*)'").firstMatch(instance.toString());
-    final name = '${match![0]}';
-    return name.substring(1, name.length - 1);
   }
 }
