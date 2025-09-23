@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import '../handle/response.dart';
+import '../helpers/helpers.dart';
 
 class Context {
   final HttpRequest request;
@@ -30,7 +31,7 @@ Future<Context> runMiddlewares({
   void stop() => shouldStop = true;
 
   for (var middleware in middlewares) {
-    // _printRequestPath(request, '🔮 ${_getInstanceName(middleware)}');
+    printRequestPath(context.request, '🔮 ${getInstanceName(middleware)}');
     context = await middleware(context, stop);
     if (shouldStop) break;
   }

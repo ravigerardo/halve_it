@@ -1,7 +1,6 @@
 import 'dart:io';
 
-import 'package:intl/intl.dart';
-
+import '../helpers/print_logs.dart';
 import 'middleware.dart';
 import '../handle/response.dart';
 import 'route_group.dart';
@@ -30,7 +29,7 @@ class Router {
       try {
         (route, routeGroup) = _getRouteAndRoutGroup(request);
       } catch (error) {
-        _printRequestPath(request, '😵‍💫 Route not found - $error');
+        printRequestPath(request, '😵‍💫 Route not found - $error');
         response.statusCode = HttpStatus.notFound;
         response.close();
         return;
@@ -50,19 +49,18 @@ class Router {
       );
 
       finalResponse = context.response;
+      route.handle.cookies.addAll(context.cookies);
 
       if (finalResponse == null) {
-        _printRequestPath(request, '🌸 ${_getInstanceName(route.handle)}');
+        printRequestPath(request, '🌸 ${_getInstanceName(route.handle)}');
         finalResponse = await route.handle(request, params);
       }
 
-      if (route.handle.cookies.isNotEmpty) {
-        response.cookies.addAll(route.handle.cookies);
-      }
+      response.cookies.addAll(route.handle.cookies);
 
       if (finalResponse.redirection != null) {
         final redirection = finalResponse.redirection;
-        _printRequestPath(
+        printRequestPath(
           request,
           '🛸 Redirect to '
           '${redirection!.location.host}'
@@ -84,7 +82,7 @@ class Router {
       return;
     } catch (error) {
       response.statusCode = HttpStatus.internalServerError;
-      _printRequestPath(request, '😵‍💫 Internal Server Error - $error');
+      printRequestPath(request, '😵‍💫 Internal Server Error - $error');
       response.close();
       return;
     }
@@ -129,12 +127,6 @@ class Router {
     }
 
     return params;
-  }
-
-  void _printRequestPath(HttpRequest request, String details) {
-    print('[${DateFormat('Hms').format(DateTime.now())}] ' +
-        'Request for ' +
-        '${request.method} ${request.uri.path} - $details');
   }
 
   String _getInstanceName(instance) {
